@@ -59,7 +59,6 @@ export default function CatalogoPage() {
     fetchBooks()
   }, [])
 
-  // Filtrar livros
   const filteredBooks = books.filter((book) => {
     const matchesSearch =
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -69,12 +68,11 @@ export default function CatalogoPage() {
     const matchesObjectives =
       selectedObjectives.length === 0 || selectedObjectives.some((obj) => book.objectives.includes(obj))
 
-    const matchesCity = !selectedCity || book.userCity === selectedCity
+    const matchesCity = !selectedCity || book.userCity === selectedCity.split("-")[0]
 
     return matchesSearch && matchesObjectives && matchesCity
   })
 
-  // Obter cidades únicas
   const cities = Array.from(new Set(books.map((book) => `${book.userCity}-${book.userState}`)))
 
   return (

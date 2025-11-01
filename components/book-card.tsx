@@ -24,8 +24,8 @@ const objectiveLabels: Record<string, string> = {
 
 const objectiveColors: Record<string, string> = {
   Exchange: "bg-primary/10 text-primary hover:bg-primary/20",
-  Donation: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
-  Loan: "bg-green-100 text-green-700 hover:bg-green-200",
+  Donation: "bg-green-100 text-green-700 hover:bg-green-200",
+  Loan: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
 }
 
 export function BookCard({ book }: BookCardProps) {

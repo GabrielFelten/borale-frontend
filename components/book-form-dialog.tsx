@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Book } from "@/app/books/page"
+import { Alert, AlertDescription } from "./ui/alert"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 type BookFormDialogProps = {
   open: boolean
@@ -32,13 +34,20 @@ const OBJECTIVE_OPTIONS = [
   { value: "Loan", label: "Empréstimo" },
 ] as const
 
+type FeedbackType = "success" | "error" | null
+
 export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoading }: BookFormDialogProps) {
   const [title, setTitle] = useState("")
   const [genre, setGenre] = useState("")
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([])
   const [status, setStatus] = useState(true)
+  const [feedback, setFeedback] = useState<{ type: FeedbackType; message: string }>({
+    type: null,
+    message: "",
+  })
 
   useEffect(() => {
+    setFeedback({ type: null, message: "" })
     if (initialData) {
       setTitle(initialData.title)
       setGenre(initialData.genre)
@@ -60,6 +69,30 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    setFeedback({ type: null, message: "" })
+
+    if (!title || title.trim() === "") {
+      setFeedback({
+        type: "error",
+        message: "Por favor, preencha o campo Título",
+      })
+      return
+    }
+
+    if (!genre || genre.trim() === "") {
+      setFeedback({
+        type: "error",
+        message: "Por favor, preencha o campo Gênero",
+      })
+      return
+    }
+
+    if (selectedObjectives.length === 0) {
+      setFeedback({ type: "error", message: "Selecione ao menos um objetivo para o livro." })
+      return
+    }
+
     onSave({ title, genre, objectives: selectedObjectives, status })
     setTitle("")
     setGenre("")
@@ -95,7 +128,6 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
                   placeholder="Ex: O Pequeno Príncipe"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  required
                 />
               </div>
               <div className="grid gap-2">
@@ -105,7 +137,6 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
                   placeholder="Ex: Ficção, Romance, Fantasia"
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
-                  required
                 />
               </div>
               <div className="grid gap-3">
@@ -140,6 +171,15 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
                 </div>
                 <Switch id="status" checked={status} onCheckedChange={setStatus} />
               </div>
+              {feedback.type && (
+                <Alert
+                  variant={feedback.type === "error" ? "destructive" : "default"}
+                  className={feedback.type === "success" ? "bg-success/10 text-success border-success/20" : ""}
+                >
+                  {feedback.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                  <AlertDescription>{feedback.message}</AlertDescription>
+                </Alert>
+              )}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

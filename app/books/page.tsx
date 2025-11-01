@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BookFormDialog } from "@/components/book-form-dialog"
-import { Plus, Pencil } from "lucide-react"
+import { ConfirmDialog } from "@/components/confirm-dialog"
+import { Trash, Plus, Pencil } from "lucide-react"
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
 export type Book = {
   id: number
@@ -22,6 +24,7 @@ const OBJECTIVE_OPTIONS = [
   { value: "Donation", label: "Doação" },
   { value: "Loan", label: "Empréstimo" },
 ] as const
+
 
 export default function MeusLivrosPage() {
   const router = useRouter()
@@ -43,30 +46,30 @@ export default function MeusLivrosPage() {
     }
   }, [router])
 
-  useEffect(() => {    
+  useEffect(() => {
     fetchUserBooks()
   }, [])
 
   const fetchUserBooks = async () => {
-      try {
-        setIsLoading(true)
+    try {
+      setIsLoading(true)
 
-        const userId = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("userId="))
-          ?.split("=")[1] || ""
+      const userId = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("userId="))
+        ?.split("=")[1] || ""
 
-        const params = new URLSearchParams({ userId });
-        const response = await fetch(`https://boralebackend.onrender.com/api/Book/GetBookByUser?${params}`)
-        const data = await response.json()
-        setBooks(data)
+      const params = new URLSearchParams({ userId });
+      const response = await fetch(`https://boralebackend.onrender.com/api/Book/GetBookByUser?${params}`)
+      const data = await response.json()
+      setBooks(data)
 
-      } catch (error) {
-        console.error("Erro ao buscar livros:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    } catch (error) {
+      console.error("Erro ao buscar livros:", error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
   const handleAddBook = () => {
     setEditingBook(null)
@@ -81,15 +84,16 @@ export default function MeusLivrosPage() {
   const handleSaveBook = async (bookData: Omit<Book, "id">) => {
     try {
       setIsLoadingDialog(true)
+
       const userId = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("userId="))
-          ?.split("=")[1] || ""
-      
+        .split("; ")
+        .find((row) => row.startsWith("userId="))
+        ?.split("=")[1] || ""
+
       const baseUrl = "https://boralebackend.onrender.com";
       const response = await fetch(`${baseUrl}/api/Book/UpsertBook`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json; charset=utf-8",
           "Accept": "application/json"
         },
@@ -99,11 +103,11 @@ export default function MeusLivrosPage() {
           Genre: bookData.genre,
           Status: bookData.status,
           Objectives: bookData.objectives,
-          IdUser: userId,            
+          IdUser: userId,
         }),
       });
 
-      setIsDialogOpen(false)      
+      setIsDialogOpen(false)
       setEditingBook(null)
       setIsLoadingDialog(false)
       fetchUserBooks()
@@ -111,6 +115,21 @@ export default function MeusLivrosPage() {
       console.error("Erro ao salvar livro:", error)
     }
   }
+
+  const handleDeleteBook = async (bookId: number) => {
+    setIsLoadingDialog(true)
+    try {
+      const response = await fetch(`https://boralebackend.onrender.com/api/Book/DeleteBook?bookId=${bookId}`, {
+        method: "DELETE",
+      });
+      setIsLoadingDialog(false)
+      if (!response.ok) throw new Error("Erro ao excluir o livro");
+      fetchUserBooks();
+    } catch (error) {
+      console.error(error);
+      setIsLoadingDialog(false)
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background">
@@ -144,29 +163,36 @@ export default function MeusLivrosPage() {
                 <p className="text-muted-foreground mt-4">Carregando livros...</p>
               </div>
             ) : books.length > 0 ? (
-              <div className="rounded-md border">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Título</TableHead>
                       <TableHead className="hidden md:table-cell">Gênero</TableHead>
                       <TableHead className="hidden md:table-cell">Objetivos</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="text-center">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {books.map((book) => (
                       <TableRow key={book.id}>
-                        <TableCell className="font-medium">{book.title}</TableCell>
+                        <TableCell className="font-medium max-w-[180px] truncate">{book.title}</TableCell>
                         <TableCell className="hidden md:table-cell">{book.genre}</TableCell>
-                        <TableCell className="hidden md:table-cell">{book.objectives.map((objective) => (
-                            OBJECTIVE_OPTIONS.filter(x => x.value == objective)[0].label
-                        )).join(', ')}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleEditBook(book)} className="gap-2">
+                        <TableCell className="hidden md:table-cell">
+                          {book.objectives
+                            .map((objective) => OBJECTIVE_OPTIONS.find(x => x.value === objective)?.label)
+                            .join(", ")}
+                        </TableCell>
+                        <TableCell className="text-center flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditBook(book)}
+                            className="p-1"
+                          >
                             <Pencil className="h-4 w-4" />
-                            Editar
                           </Button>
+                          <ConfirmDialog onConfirm={() => handleDeleteBook(book.id)} />
                         </TableCell>
                       </TableRow>
                     ))}

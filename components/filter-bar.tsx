@@ -21,8 +21,8 @@ const objectives = [
 
 const objectiveColors: Record<string, string> = {
   Exchange: "cursor-pointer bg-primary/10 text-primary hover:bg-primary/20",
-  Donation: "cursor-pointer bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
-  Loan: "cursor-pointer bg-green-100 text-green-700 hover:bg-green-200",
+  Donation: "cursor-pointer bg-green-100 text-green-700 hover:bg-green-200",
+  Loan: "cursor-pointer bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
 }
 
 export function FilterBar({
@@ -86,7 +86,6 @@ export function FilterBar({
               <SelectValue placeholder="Todas as cidades" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as cidades</SelectItem>
               {cities.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
