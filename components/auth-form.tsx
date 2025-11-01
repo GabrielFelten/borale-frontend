@@ -31,9 +31,8 @@ interface Cidade {
 export function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const initialMode = (searchParams.get("mode") as AuthMode) || "login"
 
-  const [mode, setMode] = useState<AuthMode>(initialMode)
+  const [mode, setMode] = useState<AuthMode>("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
