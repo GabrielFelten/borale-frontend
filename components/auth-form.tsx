@@ -191,7 +191,7 @@ export function AuthForm() {
 
       setFeedback({
         type: "success",
-        message: "Usuário registrado com sucesso!",
+        message: mode === "login" ? "Login realizado com sucesso!" : "Usuário registrado com sucesso!",
       });
 
       setTimeout(() => {
