@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar"
 import { BookCard } from "@/components/book-card"
 import { SearchBar } from "@/components/search-bar"
 import { FilterBar } from "@/components/filter-bar"
+import { getLocationWithCity } from "@/services/locationService";
 
 // Tipo para os livros
 type Book = {
@@ -26,54 +27,66 @@ export default function CatalogoPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([])
   const [selectedCity, setSelectedCity] = useState("")
+  const [userCity, setUserCity] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [cities, setCities] = useState<string[]>([])
 
   useEffect(() => {
-    const userId = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("userId="))
-      ?.split("=")[1]
-
-    if (!userId) {
-      router.push("/auth?mode=login")
-      return
-    }
-  }, [router])
-
-  useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchData = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
 
-        const response = await fetch("https://boralebackend.onrender.com/api/Catalog/ListCatalogAsync")
-        const data = await response.json()
-        setBooks(data)
+        const response = await fetch(
+          "https://boralebackend.onrender.com/api/Catalog/ListCatalogAsync"
+        );
+        const data = await response.json();
+        setBooks(data);
+
+        let userCityState = ``;
+        // Geolocalização
+        try {
+          const loc = await getLocationWithCity();
+          userCityState = `${loc.city}-${loc.state}`;
+          setUserCity(userCityState);
+        } catch {
+          console.warn("Localização negada ou indisponível.");
+        }
+
+        // Lista de cidades existentes no catálogo
+        const uniqueCities = Array.from(
+          new Set((data as Book[]).map((b) => `${b.userCity}-${b.userState}`))
+        ) as string[];
+
+        if (userCityState && uniqueCities.includes(userCityState))
+          setSelectedCity(userCityState);
+
+        setCities(uniqueCities);
 
       } catch (error) {
-        console.error("Erro ao buscar livros:", error)
+        console.error("Erro ao buscar livros:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchBooks()
-  }, [])
+    fetchData();
+  }, []);
 
   const filteredBooks = books.filter((book) => {
     const matchesSearch =
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.userName.toLowerCase().includes(searchQuery.toLowerCase())
+      book.userName.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesObjectives =
-      selectedObjectives.length === 0 || selectedObjectives.some((obj) => book.objectives.includes(obj))
+      selectedObjectives.length === 0 ||
+      selectedObjectives.some((obj) => book.objectives.includes(obj));
 
-    const matchesCity = !selectedCity || book.userCity === selectedCity.split("-")[0]
+    const matchesCity =
+      !selectedCity || `${book.userCity}-${book.userState}` === selectedCity;
 
-    return matchesSearch && matchesObjectives && matchesCity
-  })
-
-  const cities = Array.from(new Set(books.map((book) => `${book.userCity}-${book.userState}`)))
+    return matchesSearch && matchesObjectives && matchesCity;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background">

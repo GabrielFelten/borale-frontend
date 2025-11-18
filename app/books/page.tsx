@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BookFormDialog } from "@/components/book-form-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Trash, Plus, Pencil } from "lucide-react"
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
 export type Book = {
   id: number
@@ -58,6 +57,8 @@ export default function MeusLivrosPage() {
         .split("; ")
         .find((row) => row.startsWith("userId="))
         ?.split("=")[1] || ""
+      
+      if (!userId) return;
 
       const params = new URLSearchParams({ userId });
       const response = await fetch(`https://boralebackend.onrender.com/api/Book/GetBookByUser?${params}`)

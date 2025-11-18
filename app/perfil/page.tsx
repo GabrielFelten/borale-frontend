@@ -103,6 +103,8 @@ export default function PerfilPage() {
           .find((row) => row.startsWith("userId="))
           ?.split("=")[1] || ""
 
+        if (!userId) return;
+
         const params = new URLSearchParams({ userId });
         const response = await fetch(`https://boralebackend.onrender.com/api/Login/GetUser?${params}`)
         const data = await response.json()
