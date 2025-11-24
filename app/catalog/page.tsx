@@ -54,7 +54,8 @@ export default function CatalogoPage() {
 
         // Lista de cidades existentes no catálogo
         const uniqueCities = Array.from(
-          new Set((data as Book[]).map((b) => `${b.userCity}-${b.userState}`))
+          new Set((data as Book[]).filter(b => b.userCity)
+            .map((b) => `${b.userCity}-${b.userState}`))
         ) as string[];
 
         if (userCityState && uniqueCities.includes(userCityState))

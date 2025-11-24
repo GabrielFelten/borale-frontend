@@ -65,7 +65,7 @@ export function Navbar() {
                   <Button
                     key={link.href}
                     variant="ghost"
-                    className="gap-2"
+                    className="gap-2 cursor-pointer"
                     onClick={() => handleProtectedClick(link.href, link.protected)}
                   >
                     <Icon className="h-4 w-4" />

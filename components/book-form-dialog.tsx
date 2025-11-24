@@ -39,6 +39,7 @@ type FeedbackType = "success" | "error" | null
 export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoading }: BookFormDialogProps) {
   const [title, setTitle] = useState("")
   const [genre, setGenre] = useState("")
+  const [author, setAuthor] = useState("")
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([])
   const [status, setStatus] = useState(true)
   const [feedback, setFeedback] = useState<{ type: FeedbackType; message: string }>({
@@ -51,11 +52,13 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
     if (initialData) {
       setTitle(initialData.title)
       setGenre(initialData.genre)
+      setAuthor(initialData.author)
       setSelectedObjectives(initialData.objectives)
       setStatus(initialData.status)
     } else {
       setTitle("")
       setGenre("")
+      setAuthor("")
       setSelectedObjectives([])
       setStatus(true)
     }
@@ -88,14 +91,23 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
       return
     }
 
+    if (!author || author.trim() === "") {
+      setFeedback({
+        type: "error",
+        message: "Por favor, preencha o campo Autor",
+      })
+      return
+    }
+
     if (selectedObjectives.length === 0) {
       setFeedback({ type: "error", message: "Selecione ao menos um objetivo para o livro." })
       return
     }
 
-    onSave({ title, genre, objectives: selectedObjectives, status })
+    onSave({ title, genre, author, objectives: selectedObjectives, status })
     setTitle("")
     setGenre("")
+    setAuthor("")
     setSelectedObjectives([])
     setStatus(true)
   }
@@ -128,6 +140,15 @@ export function BookFormDialog({ open, onOpenChange, onSave, initialData, isLoad
                   placeholder="Ex: O Pequeno Príncipe"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="author">Autor</Label>
+                <Input
+                  id="author"
+                  placeholder="Autor do livro"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">

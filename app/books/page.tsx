@@ -14,6 +14,7 @@ export type Book = {
   id: number
   title: string
   genre: string
+  author: string
   objectives: string[]
   status: boolean
 }
@@ -102,6 +103,7 @@ export default function MeusLivrosPage() {
           Id: editingBook?.id || "",
           Title: bookData.title,
           Genre: bookData.genre,
+          Author: bookData.author,
           Status: bookData.status,
           Objectives: bookData.objectives,
           IdUser: userId,

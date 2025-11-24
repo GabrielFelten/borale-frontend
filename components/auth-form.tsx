@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, AlertCircle } from "lucide-react"
 import LoginFields from "./login-fields"
 import SignupFields from "./signup-fields"
+import { login, signup, validateSignup, ValidationMode } from "@/services/authService";
 
 type AuthMode = "login" | "signup"
 type FeedbackType = "success" | "error" | null
@@ -50,105 +51,58 @@ export function AuthForm({ onSuccess, inModal }: AuthFormProps) {
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setFeedback({ type: null, message: "" })
+  e.preventDefault();
+  setIsLoading(true);
+  setFeedback({ type: null, message: "" });
 
-    if (!email || !password || (mode === "signup" && (!name || !estado || !cidade))) {
-      setFeedback({
-        type: "error",
-        message: "Por favor, preencha todos os campos",
-      })
-      setIsLoading(false)
-      return
-    }
+  const error = validateSignup({
+    name, email, password, contato, tipo, cttPublico, cep, rua, numero, bairro
+  }, mode as ValidationMode);
 
-    if (mode === "signup" && !cttPublico) {
-      setFeedback({
-        type: "error",
-        message: "Você precisa concordar em compartilhar seus dados de contato para prosseguir",
-      })
-      setIsLoading(false)
-      return
-    }
+  if (error) {
+    setFeedback({ type: "error", message: error });
+    setIsLoading(false);
+    return;
+  }
 
-    if (!email.includes("@")) {
-      setFeedback({
-        type: "error",
-        message: "Por favor, insira um e-mail válido",
-      })
-      setIsLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setFeedback({
-        type: "error",
-        message: "A senha deve ter pelo menos 6 caracteres",
-      })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const baseUrl = "https://boralebackend.onrender.com";
-      let response;
-      if (mode === "login") {
-        const params = new URLSearchParams({ email, pass: password });
-        response = await fetch(`${baseUrl}/api/Login/Login?${params.toString()}`, {
-          method: "GET",
-        });
-      } else {
-        response = await fetch(`${baseUrl}/api/Login/UpsertUser`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
+  try {
+    const data =
+      mode === "login"
+        ? await login(email, password)
+        : await signup({
             Id: "",
             Name: name,
             Email: email,
             Pass: password,
             State: estado,
             City: cidade,
-            Phone: contato
-          }),
-        });
-      }
+            Phone: contato,
+            Cep: cep,
+            Street: rua,
+            Number: numero,
+            Neighborhood: bairro,
+            PublicContact: cttPublico,
+            Type: tipo,
+          });
 
-      const data = await response.json();
-      if (!response.ok) {
-        setFeedback({
-          type: "error",
-          message: data.message || "Erro na requisição",
-        });
-        return;
-      }
+    document.cookie = `userId=${data.id}; path=/; max-age=2592000`;
+    setFeedback({
+      type: "success",
+      message: mode === "login"
+        ? "Login realizado com sucesso!"
+        : "Usuário registrado com sucesso!",
+    });
 
-      document.cookie = `userId=${data.id}; path=/; max-age=2592000`; // 30 dias
+    setTimeout(() => {
+      onSuccess ? onSuccess() : router.push("/catalog");
+    }, 1000);
 
-      setFeedback({
-        type: "success",
-        message: mode === "login" ? "Login realizado com sucesso!" : "Usuário registrado com sucesso!",
-      });
-
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-          return;
-        }
-        router.push("/catalog");
-      }, 1000);
-    } catch (error) {
-      setFeedback({
-        type: "error",
-        message: "Ocorreu um erro. Tente novamente.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  } catch (err: any) {
+    setFeedback({ type: "error", message: err.message });
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const toggleMode = () => {
     const newMode = mode === "login" ? "signup" : "login"
@@ -189,6 +143,9 @@ export function AuthForm({ onSuccess, inModal }: AuthFormProps) {
             />
           ) : (
             <SignupFields
+              mode="signup"
+              email={email}
+              password={password}
               name={name}
               cep={cep}
               rua={rua}
@@ -196,11 +153,11 @@ export function AuthForm({ onSuccess, inModal }: AuthFormProps) {
               bairro={bairro}
               cttPublico={cttPublico}
               tipo={tipo}
-              estado={estado}
-              cidade={cidade}
               contato={contato}
               isLoading={isLoading}
               setName={setName}
+              setEmail={setEmail}
+              setPassword={setPassword}
               setEstado={setEstado}
               setCidade={setCidade}
               setContato={setContato}

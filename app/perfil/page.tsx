@@ -8,8 +8,11 @@ import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { User, CheckCircle2 } from "lucide-react"
+import { User, CheckCircle2, AlertCircle } from "lucide-react"
 import SignupFields from "@/components/signup-fields"
+import { login, signup, validateSignup } from "@/services/authService";
+
+type FeedbackType = "success" | "error" | null
 
 export default function PerfilPage() {
   const router = useRouter()
@@ -27,6 +30,10 @@ export default function PerfilPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
+  const [feedback, setFeedback] = useState<{ type: FeedbackType; message: string }>({
+    type: null,
+    message: "",
+  })
 
   useEffect(() => {
     const userId = document.cookie
@@ -60,6 +67,12 @@ export default function PerfilPage() {
         setCidade(data.city)
         setContato(data.phone)
         setEmail(data.email)
+        setCep(data.cep)
+        setRua(data.street)
+        setNumero(data.number)
+        setBairro(data.neighborhood)
+        setCttPublico(data.publicContact)
+        setTipo(data.type)
 
       } catch (error) {
         console.error("Erro ao buscar perfil:", error)
@@ -72,41 +85,52 @@ export default function PerfilPage() {
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setShowSuccess(false)
+    e.preventDefault();
+    setIsLoading(true);
+    setFeedback({ type: null, message: "" });
 
+    const error = validateSignup({
+      name, email, password: "", contato, tipo, cttPublico, cep, rua, numero, bairro
+    }, "update");
+
+    if (error) {
+      setFeedback({ type: "error", message: error });
+      setIsLoading(false);
+      return;
+    }
+    const userId = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("userId="))
+      ?.split("=")[1]
     try {
-      const userId = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("userId="))
-        ?.split("=")[1]
-
-      const baseUrl = "https://boralebackend.onrender.com";
-      const response = await fetch(`${baseUrl}/api/Login/UpsertUser`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          Id: userId,
-          Name: name,
-          Email: email,
-          Pass: "",
-          State: estado,
-          City: cidade,
-          Phone: contato
-        }),
+      const data = await signup({
+        Id: userId,
+        Name: name,
+        Email: email,
+        Pass: "",
+        State: estado,
+        City: cidade,
+        Phone: contato,
+        Cep: cep,
+        Street: rua,
+        Number: numero,
+        Neighborhood: bairro,
+        PublicContact: cttPublico,
+        Type: tipo,
       });
 
-      setShowSuccess(true)
-    } catch (error) {
-      console.error("Erro ao salvar perfil:", error)
+      document.cookie = `userId=${data.id}; path=/; max-age=2592000`;
+      setFeedback({
+        type: "success",
+        message: "Alterações salvas com sucesso!",
+      });
+
+    } catch (err: any) {
+      setFeedback({ type: "error", message: err.message });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -135,6 +159,9 @@ export default function PerfilPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <SignupFields
+                  mode="update"
+                  email={email}
+                  password={""}
                   name={name}
                   cep={cep}
                   rua={rua}
@@ -142,8 +169,6 @@ export default function PerfilPage() {
                   bairro={bairro}
                   cttPublico={cttPublico}
                   tipo={tipo}
-                  estado={estado}
-                  cidade={cidade}
                   contato={contato}
                   isLoading={isLoading}
                   setName={setName}
@@ -158,11 +183,13 @@ export default function PerfilPage() {
                   setTipo={setTipo}
                 />
 
-                {/* Mensagem de sucesso */}
-                {showSuccess && (
-                  <Alert className="bg-success/10 text-success border-success/20">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <AlertDescription>Alterações salvas com sucesso!</AlertDescription>
+                {feedback.type && (
+                  <Alert
+                    variant={feedback.type === "error" ? "destructive" : "default"}
+                    className={feedback.type === "success" ? "bg-success/10 text-success border-success/20" : ""}
+                  >
+                    {feedback.type === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                    <AlertDescription>{feedback.message}</AlertDescription>
                   </Alert>
                 )}
 

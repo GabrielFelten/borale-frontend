@@ -1,6 +1,6 @@
 "use client"
 
-import { User, Phone, Loader2 } from "lucide-react"
+import { User, Phone, Loader2, Mail, LockIcon } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -9,18 +9,21 @@ import { buscarViaCep } from "@/services/locationService";
 import { useState } from "react"
 
 interface Props {
+  mode?: "signup" | "update"
   name: string
+  email?: string
+  password?: string
   cep: string
   rua: string
   numero: string
   bairro: string
   cttPublico: boolean
   tipo: string
-  estado: string
-  cidade: string
   contato: string
   isLoading: boolean
   setName: (v: string) => void
+  setEmail?: (v: string) => void
+  setPassword?: (v: string) => void
   setEstado: (v: string) => void
   setCidade: (v: string) => void
   setContato: (v: string) => void
@@ -34,9 +37,10 @@ interface Props {
 
 export default function SignupFields(props: Props) {
   const {
-    name, cep, rua, numero, bairro, cttPublico, tipo, estado, cidade, contato,
+    mode = "update",
+    email, password, name, cep, rua, numero, bairro, cttPublico, tipo, contato,
     isLoading,
-    setName, setEstado, setCidade, setContato, setCttPublico, setCep, setRua, setNumero, setBairro, setTipo
+    setName, setEmail, setPassword, setEstado, setCidade, setContato, setCttPublico, setCep, setRua, setNumero, setBairro, setTipo
   } = props
   const [isLoadingCep, setIsLoadingCep] = useState(false)
   const [erroCep, setErroCep] = useState("")
@@ -92,6 +96,41 @@ export default function SignupFields(props: Props) {
 
   return (
     <>
+      {mode === "signup" && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Seu e-mail"
+                value={email}
+                onChange={(e) => setEmail?.(e.target.value)}
+                className="pl-10 h-11"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <div className="relative">
+              <LockIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword?.(e.target.value)}
+                className="pl-10 h-11"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+        </>
+      )}
       <div className="space-y-2">
         <Label htmlFor="name" className="text-sm font-medium">
           Nome completo
