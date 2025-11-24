@@ -14,7 +14,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
       <Input
         type="text"
-        placeholder="Buscar por título, gênero ou proprietário..."
+        placeholder="Buscar por título, autor, gênero ou proprietário..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="pl-10 h-12 text-base bg-card"

@@ -13,12 +13,17 @@ type Book = {
   id: number
   title: string
   genre: string
+  author: string
   objectives: string[]
   userName: string
   userPhone: string
   userEmail: string
   userCity: string
   userState: string
+  userStreet: string
+  userNumber: string
+  userNeighborhood: string
+  userPublicContact: boolean
 }
 
 export default function CatalogoPage() {
@@ -27,7 +32,6 @@ export default function CatalogoPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([])
   const [selectedCity, setSelectedCity] = useState("")
-  const [userCity, setUserCity] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [cities, setCities] = useState<string[]>([])
 
@@ -47,7 +51,6 @@ export default function CatalogoPage() {
         try {
           const loc = await getLocationWithCity();
           userCityState = `${loc.city}-${loc.state}`;
-          setUserCity(userCityState);
         } catch {
           console.warn("Localização negada ou indisponível.");
         }
@@ -77,6 +80,7 @@ export default function CatalogoPage() {
     const matchesSearch =
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.userName.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesObjectives =
