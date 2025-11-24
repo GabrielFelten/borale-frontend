@@ -5,30 +5,21 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Lock, User, CheckCircle2, AlertCircle, Phone } from "lucide-react"
-import { formatPhoneNumber } from "@/lib/phone-mask"
+import { CheckCircle2, AlertCircle } from "lucide-react"
+import LoginFields from "./login-fields"
+import SignupFields from "./signup-fields"
 
 type AuthMode = "login" | "signup"
 type FeedbackType = "success" | "error" | null
 
-interface Estado {
-  id: number
-  sigla: string
-  nome: string
+interface AuthFormProps {
+  onSuccess?: () => void,
+  inModal?: boolean
 }
 
-interface Cidade {
-  id: number
-  nome: string
-}
-
-export function AuthForm() {
+export function AuthForm({ onSuccess, inModal }: AuthFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -36,14 +27,15 @@ export function AuthForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [cep, setCep] = useState("")
+  const [rua, setRua] = useState("")
+  const [numero, setNumero] = useState("")
+  const [bairro, setBairro] = useState("")
+  const [cttPublico, setCttPublico] = useState(false)
+  const [tipo, setTipo] = useState("")
   const [estado, setEstado] = useState("")
   const [cidade, setCidade] = useState("")
   const [contato, setContato] = useState("")
-  const [estados, setEstados] = useState<Estado[]>([])
-  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<Cidade[]>([])
-  const [loadingEstados, setLoadingEstados] = useState(false)
-  const [loadingCidades, setLoadingCidades] = useState(false)
-  const [agreeToShare, setAgreeToShare] = useState(false)
   const [feedback, setFeedback] = useState<{ type: FeedbackType; message: string }>({
     type: null,
     message: "",
@@ -56,59 +48,6 @@ export function AuthForm() {
       setMode(modeParam)
     }
   }, [searchParams])
-
-  useEffect(() => {
-    const fetchEstados = async () => {
-      setLoadingEstados(true)
-      try {
-        const response = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome")
-        const data: Estado[] = await response.json()
-        setEstados(data)
-      } catch (error) {
-        console.error("Erro ao buscar estados:", error)
-        setFeedback({
-          type: "error",
-          message: "Erro ao carregar estados. Tente novamente.",
-        })
-      } finally {
-        setLoadingEstados(false)
-      }
-    }
-
-    if (mode === "signup") {
-      fetchEstados()
-    }
-  }, [mode])
-
-  useEffect(() => {
-    const fetchCidades = async () => {
-      if (!estado) {
-        setCidadesDisponiveis([])
-        setCidade("")
-        return
-      }
-
-      setLoadingCidades(true)
-      try {
-        const response = await fetch(
-          `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios?orderBy=nome`,
-        )
-        const data: Cidade[] = await response.json()
-        setCidadesDisponiveis(data)
-        setCidade("") // Limpar cidade selecionada ao mudar o estado
-      } catch (error) {
-        console.error("Erro ao buscar cidades:", error)
-        setFeedback({
-          type: "error",
-          message: "Erro ao carregar cidades. Tente novamente.",
-        })
-      } finally {
-        setLoadingCidades(false)
-      }
-    }
-
-    fetchCidades()
-  }, [estado])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,7 +63,7 @@ export function AuthForm() {
       return
     }
 
-    if (mode === "signup" && !agreeToShare) {
+    if (mode === "signup" && !cttPublico) {
       setFeedback({
         type: "error",
         message: "Você precisa concordar em compartilhar seus dados de contato para prosseguir",
@@ -162,7 +101,7 @@ export function AuthForm() {
       } else {
         response = await fetch(`${baseUrl}/api/Login/UpsertUser`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json; charset=utf-8",
             "Accept": "application/json"
           },
@@ -180,7 +119,7 @@ export function AuthForm() {
 
       const data = await response.json();
       if (!response.ok) {
-          setFeedback({
+        setFeedback({
           type: "error",
           message: data.message || "Erro na requisição",
         });
@@ -195,6 +134,10 @@ export function AuthForm() {
       });
 
       setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+          return;
+        }
         router.push("/catalog");
       }, 1000);
     } catch (error) {
@@ -211,172 +154,63 @@ export function AuthForm() {
     const newMode = mode === "login" ? "signup" : "login"
     setMode(newMode)
     setFeedback({ type: null, message: "" })
-    setAgreeToShare(false)
+    setCttPublico(false)
     setEstado("")
     setCidade("")
     setContato("")
-    router.push(`/auth?mode=${newMode}`)
-  }
-
-  const handleContatoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value)
-    setContato(formatted)
+    if (!inModal)
+      router.push(`/auth?mode=${newMode}`)
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-0">
-      <CardHeader className="space-y-3 text-center pb-6">
-        <div className="flex justify-center">
-          <div className="text-5xl mb-2">📚</div>
-        </div>
-        <CardTitle className="text-3xl font-bold text-balance">BoraLê</CardTitle>
-        <CardDescription className="text-base">
-          {mode === "login" ? "Entre na sua conta" : "Crie sua conta gratuitamente"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Card className={`w-full max-w-md border-0 ${inModal ? "max-h-[90vh] overflow-hidden" : ""}`}>
+      {!inModal && (
+        <CardHeader className="space-y-3 text-center pb-6">
+          <div className="flex justify-center">
+            <div className="text-5xl mb-2">📚</div>
+          </div>
+          <CardTitle className="text-3xl font-bold text-balance">BoraLer</CardTitle>
+          <CardDescription className="text-base">
+            {mode === "login"
+              ? "Entre na sua conta"
+              : "Crie sua conta gratuitamente"}
+          </CardDescription>
+        </CardHeader>
+      )}
+      <CardContent className={`space-y-6 ${inModal ? "overflow-y-auto pr-1 max-h-[70vh]" : ""}`}>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === "signup" && (
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Nome completo
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10 h-11"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">
-              E-mail
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 h-11"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium">
-              Senha
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 h-11"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {mode === "signup" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="estado" className="text-sm font-medium">
-                  Estado
-                </Label>
-                <Select value={estado} onValueChange={setEstado} disabled={isLoading || loadingEstados}>
-                  <SelectTrigger id="estado" className="w-full h-11">
-                    <SelectValue placeholder={loadingEstados ? "Carregando estados..." : "Selecione seu estado"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {estados.map((est) => (
-                      <SelectItem key={est.id} value={est.sigla}>
-                        {est.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cidade" className="text-sm font-medium">
-                  Cidade
-                </Label>
-                <Select value={cidade} onValueChange={setCidade} disabled={isLoading || !estado || loadingCidades}>
-                  <SelectTrigger id="cidade" className="w-full h-11">
-                    <SelectValue
-                      placeholder={
-                        loadingCidades
-                          ? "Carregando cidades..."
-                          : estado
-                            ? "Selecione sua cidade"
-                            : "Selecione o estado primeiro"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cidadesDisponiveis.map((cid) => (
-                      <SelectItem key={cid.id} value={cid.nome}>
-                        {cid.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="contato" className="text-sm font-medium">
-                  Contato
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="contato"
-                    type="tel"
-                    placeholder="(00) 00000-0000"
-                    value={contato}
-                    onChange={handleContatoChange}
-                    className="pl-10 h-11"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {mode === "signup" && (
-            <div className="flex items-start space-x-3 rounded-lg border p-4 bg-muted/30">
-              <Checkbox
-                id="agreeToShare"
-                checked={agreeToShare}
-                onCheckedChange={(checked) => setAgreeToShare(checked as boolean)}
-                disabled={isLoading}
-                className="mt-0.5"
-              />
-              <div className="space-y-1 leading-none">
-                <Label htmlFor="agreeToShare" className="text-sm font-medium leading-relaxed cursor-pointer">
-                  Concordo em compartilhar meus dados de contato
-                </Label>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Seu e-mail e telefone serão exibidos no catálogo para que outros usuários possam entrar em contato
-                  sobre trocas, doações e empréstimos de livros.
-                </p>
-              </div>
-            </div>
+          {mode === "login" ? (
+            <LoginFields
+              email={email}
+              password={password}
+              isLoading={isLoading}
+              setEmail={setEmail}
+              setPassword={setPassword}
+            />
+          ) : (
+            <SignupFields
+              name={name}
+              cep={cep}
+              rua={rua}
+              numero={numero}
+              bairro={bairro}
+              cttPublico={cttPublico}
+              tipo={tipo}
+              estado={estado}
+              cidade={cidade}
+              contato={contato}
+              isLoading={isLoading}
+              setName={setName}
+              setEstado={setEstado}
+              setCidade={setCidade}
+              setContato={setContato}
+              setCep={setCep}
+              setRua={setRua}
+              setNumero={setNumero}
+              setBairro={setBairro}
+              setCttPublico={setCttPublico}
+              setTipo={setTipo}
+            />
           )}
 
           {feedback.type && (

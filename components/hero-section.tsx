@@ -10,7 +10,7 @@ export function HeroSection() {
         {/* Logo e Título */}
         <div className="text-center mb-12">
           <div className="text-7xl mb-4">📚</div>
-          <h1 className="text-5xl md:text-6xl font-bold text-balance mb-4">BoraLê</h1>
+          <h1 className="text-5xl md:text-6xl font-bold text-balance mb-4">BoraLer</h1>
           <p className="text-xl md:text-2xl text-muted-foreground text-balance">
             Unindo pessoas e bibliotecas por meio do compartilhamento de livros
           </p>
@@ -74,7 +74,7 @@ export function HeroSection() {
 
         {/* Ação principal - Catálogo */}
         <div className="flex justify-center mb-6">
-          <Button asChild size="lg" variant="secondary" className="group text-lg h-14 px-10 w-full sm:w-auto gap-2 shadow-md transition-all hover:shadow-lg hover:bg-secondary/80">
+          <Button asChild size="lg" className="text-lg h-14 px-8">
             <Link href="/catalog" className="flex items-center">
               Ver Catálogo de Livros
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -84,7 +84,7 @@ export function HeroSection() {
 
         {/* Botões de Ação */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild size="lg" className="text-lg h-14 px-8">
+          <Button asChild size="lg" variant="outline" className="text-lg h-14 px-8 bg-transparent">
             <Link href="/auth?mode=login">Fazer Login</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="text-lg h-14 px-8 bg-transparent">

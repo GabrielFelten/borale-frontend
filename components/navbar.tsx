@@ -11,6 +11,7 @@ export function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
   const [showModal, setShowModal] = useState(false)
+  const [redirectPath, setRedirectPath] = useState<string | null>(null)
 
   const isLogged = () => {
     const userId = document.cookie
@@ -32,6 +33,7 @@ export function Navbar() {
 
   const handleProtectedClick = (href: string, requiresLogin: boolean) => {
     if (requiresLogin && !isLogged()) {
+      setRedirectPath(href)
       setShowModal(true)
       return
     }
@@ -52,7 +54,7 @@ export function Navbar() {
               className="flex items-center gap-2 font-bold text-xl hover:text-primary transition-colors"
             >
               <span className="text-2xl">📚</span>
-              <span>BoraLê</span>
+              <span>BoraLer</span>
             </Link>
 
             {/* Navigation */}
@@ -76,7 +78,7 @@ export function Navbar() {
         </div>
       </nav>
 
-      <LoginRequiredModal open={showModal} onOpenChange={setShowModal} />
+      <LoginRequiredModal open={showModal} onOpenChange={setShowModal} redirectPath={redirectPath ?? "/catalog"} />
     </>
   )
 }

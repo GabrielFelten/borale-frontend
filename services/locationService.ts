@@ -1,5 +1,3 @@
-// src/services/locationService.ts
-
 export interface UserLocation {
   latitude: number;
   longitude: number;
@@ -82,4 +80,15 @@ export async function getLocationWithCity(): Promise<UserLocation> {
   const location = await getBrowserLocation();
   const region = await getCityAndState(location.latitude, location.longitude);
   return { ...location, ...region };
+}
+
+export async function buscarViaCep(cepLimpo: string) {
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+    const data = await res.json()
+    if (data.erro) throw new Error("CEP não encontrado")
+    return data;
+  } catch {
+    return null;
+  }
 }

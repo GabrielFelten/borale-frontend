@@ -1,38 +1,33 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
+import { AuthForm } from "@/components/auth-form"
 
 interface Props {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (open: boolean) => void,
+  redirectPath: string | null
 }
 
-export function LoginRequiredModal({ open, onOpenChange }: Props) {
+export function LoginRequiredModal({ open, onOpenChange, redirectPath }: Props) {
   const router = useRouter()
 
-  const goToLogin = () => {
+  const handleSuccess = () => {
     onOpenChange(false)
-    router.push("/auth?mode=login")
+    if (redirectPath) {
+      router.push(redirectPath)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Acesso restrito</DialogTitle>
-          <DialogDescription>
-            Você precisa estar logado para acessar esta área.
-          </DialogDescription>
+          <DialogTitle>Faça login para continuar</DialogTitle>
         </DialogHeader>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={goToLogin}>
-            Fazer login
-          </Button>
-        </DialogFooter>
+        <AuthForm inModal onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   )
