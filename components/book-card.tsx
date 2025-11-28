@@ -47,26 +47,33 @@ export function BookCard({ book }: BookCardProps) {
   return (
     <Card className="hover:shadow-xl shadow-sm border border-border/50 h-full flex flex-col">
       <CardHeader>
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Book className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <CardTitle className="text-lg leading-tight mb-1 truncate" title={book.title}>
-              {book.title}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground truncate" title={book.author}>
-              {book.author}
-            </p>
-            <p className="text-sm text-muted-foreground truncate" title={book.genre}>
-              {book.genre}
-            </p>
-          </div>
+      <div className="flex items-start gap-3 min-w-0">
+        <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+          <Book className="h-5 w-5 text-primary" />
         </div>
-      </CardHeader>
-
+        <div className="flex-1 min-w-0">
+          <h3
+            className="text-lg font-semibold leading-tight mb-1 overflow-hidden text-ellipsis whitespace-nowrap max-w-full block"
+            title={book.title}
+          >
+            {book.title}
+          </h3>
+          <p
+            className="text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap max-w-full"
+            title={book.author}
+          >
+            {book.author}
+          </p>
+          <p
+            className="text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap max-w-full"
+            title={book.genre}
+          >
+            {book.genre}
+          </p>
+        </div>
+      </div>
+    </CardHeader>
       <CardContent className="space-y-4 flex-grow">
-        {/* Objectives */}
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Disponível para:</p>
           <div className="flex flex-wrap gap-2">
@@ -77,24 +84,17 @@ export function BookCard({ book }: BookCardProps) {
             ))}
           </div>
         </div>
-
-        {/* Owner Info */}
         <div className="pt-4 border-t border-border">
           <p className="text-xs font-medium text-muted-foreground mb-3">
             Informações do proprietário:
           </p>
-
           <div className="space-y-2">
-            {/* Nome */}
             <div className="flex items-center gap-2 text-sm truncate" title={book.userName}>
               <span className="font-medium">{book.userName}</span>
             </div>
-
-            {/* Endereço agrupado */}
             {(book.userCity || mapsUrl) && (
               <div className="flex items-center gap-2 text-sm truncate">
                 <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-
                 {mapsUrl ? (
                   <a
                     href={mapsUrl}
@@ -113,8 +113,6 @@ export function BookCard({ book }: BookCardProps) {
                 )}
               </div>
             )}
-
-            {/* Contatos */}
             {book.userPhone && book.userPublicContact && (
               <>
                 <div className="flex items-center gap-2 text-sm">
@@ -127,7 +125,6 @@ export function BookCard({ book }: BookCardProps) {
                     {book.userPhone}
                   </a>
                 </div>
-
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <a
