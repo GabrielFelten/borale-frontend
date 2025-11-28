@@ -1,9 +1,25 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, BookOpen, Heart, Library, RefreshCw, University, Users } from "lucide-react"
+import { ArrowRight, BookOpen, Heart, RefreshCw, University, Users } from "lucide-react"
+import { useEffect } from "react";
 
 export function HeroSection() {
+  useEffect(() => {
+      // Hospedagem do backend gratuito desliga por inatividade.
+      // Por isso precisa de inicialização na home do site. 
+      // Assim as outras requisições ficam um pouco mais rápidas.
+      const fetchData = async () => {
+        const response = await fetch(
+          "https://boralebackend.onrender.com/api/Login/InitApi"
+        );
+        const data = await response.json();
+      };
+      fetchData();
+    }, []);
+
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
       <div className="max-w-4xl mx-auto">
